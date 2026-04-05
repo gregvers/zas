@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     colorNote?: string;
   };
 
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
+  const lineItems = items.map((item) => ({
     price_data: {
       currency: "cad",
       product_data: {
