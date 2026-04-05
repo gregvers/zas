@@ -13,11 +13,8 @@ import HeartCounter from "@/components/HeartCounter";
 import FloatingParticles from "@/components/FloatingParticles";
 
 const zoneParticles: Record<Zone, string[]> = {
-  jewelry: ["💎", "⭐", "✨", "🌟", "💫", "🔮"],
   squishy: ["🍡", "🌸", "🎀", "🍭", "🌈", "💕"],
   slime: ["🫧", "💚", "✨", "🟢", "💦", "🌿"],
-  stuffies: ["🧸", "🐻", "💛", "🌟", "🤗", "☁️"],
-  misc: ["🌈", "✨", "🎁", "💫", "🪄", "⭐"],
 };
 
 export default function ZonePage({ params }: { params: Promise<{ zone: string }> }) {
