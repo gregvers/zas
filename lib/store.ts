@@ -15,6 +15,7 @@ type StoreState = {
   markZoneVisited: (zone: Zone) => void;
   incrementHubVisit: () => void;
   markEnteredStore: () => void;
+  clearHearts: () => void;
 };
 
 export const useStore = create<StoreState>()(
@@ -46,6 +47,7 @@ export const useStore = create<StoreState>()(
       incrementHubVisit: () =>
         set((s) => ({ storeHubVisits: s.storeHubVisits + 1 })),
       markEnteredStore: () => set({ hasEnteredStore: true }),
+      clearHearts: () => set({ hearts: [] }),
     }),
     { name: "zoe-store" }
   )

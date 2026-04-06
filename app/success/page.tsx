@@ -3,14 +3,16 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useStore } from "@/lib/store";
 
 function SuccessContent() {
   const params = useSearchParams();
   const name = params.get("name") ?? "friend";
+  const { clearHearts } = useStore();
 
   useEffect(() => {
-    // Clear confetti-like particles — handled by Framer Motion below
-  }, []);
+    clearHearts();
+  }, [clearHearts]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-950 via-pink-900 to-violet-950 flex items-center justify-center p-6">
