@@ -127,7 +127,7 @@ function InvitationContent() {
                   onClick={handleName}
                   className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold py-3 rounded-xl text-lg shadow-lg"
                 >
-                  Meet Zoé! 🧚
+                  Enter Zoé&apos;s Store ✨
                 </motion.button>
               </div>
             </motion.div>
