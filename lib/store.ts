@@ -8,11 +8,13 @@ type StoreState = {
   visitorName: string;
   zonesVisited: Zone[];
   storeHubVisits: number; // how many times they've been back to hub
+  hasEnteredStore: boolean; // true after first "Let's go!" tap
   toggleHeart: (id: string) => void;
   isHearted: (id: string) => boolean;
   setInvited: (name: string) => void;
   markZoneVisited: (zone: Zone) => void;
   incrementHubVisit: () => void;
+  markEnteredStore: () => void;
 };
 
 export const useStore = create<StoreState>()(
@@ -23,6 +25,7 @@ export const useStore = create<StoreState>()(
       visitorName: "",
       zonesVisited: [],
       storeHubVisits: 0,
+      hasEnteredStore: false,
       toggleHeart: (id) => {
         const { hearts } = get();
         if (hearts.includes(id)) {
@@ -42,6 +45,7 @@ export const useStore = create<StoreState>()(
       },
       incrementHubVisit: () =>
         set((s) => ({ storeHubVisits: s.storeHubVisits + 1 })),
+      markEnteredStore: () => set({ hasEnteredStore: true }),
     }),
     { name: "zoe-store" }
   )

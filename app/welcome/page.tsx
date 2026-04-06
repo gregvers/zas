@@ -6,7 +6,7 @@ import { useStore } from "@/lib/store";
 import { unlockAudio, zoeSpeak } from "@/lib/zoe";
 
 export default function WelcomePage() {
-  const { invited, visitorName } = useStore();
+  const { invited, visitorName, hasEnteredStore, markEnteredStore } = useStore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -30,9 +30,12 @@ export default function WelcomePage() {
   const handleEnter = () => {
     unlockAudio();
     sessionStorage.setItem("audioUnlocked", "1");
-    zoeSpeak(
-      `Hi ${visitorName}! I'm so happy you're here! I've been waiting for you. Let me show you around my store and find you the perfect free gift!`
-    );
+    if (hasEnteredStore) {
+      zoeSpeak(`Welcome back ${visitorName}! So happy to see you again! I have some great things waiting for you.`);
+    } else {
+      zoeSpeak(`Hi ${visitorName}! I'm so happy you're here! I've been waiting for you. Let me show you around my store and find you the perfect free gift!`);
+      markEnteredStore();
+    }
     router.push("/store");
   };
 
@@ -92,7 +95,7 @@ export default function WelcomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
         >
-          <p className="text-white/70 text-lg mb-1">Welcome back,</p>
+          <p className="text-white/70 text-lg mb-1">{hasEnteredStore ? "Welcome back," : "Welcome,"}</p>
           <h1 className="text-5xl font-bold text-white mb-2">{visitorName}!</h1>
           <p className="text-purple-200 text-base mb-8">
             I&apos;ve been waiting for you 🎁<br />
