@@ -1,24 +1,33 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { zoeSpeak, unlockAudio } from "@/lib/zoe";
 
-const VALID_CODES = ["MAGIC2025", "ZOEGIFT", "SECRET", "HELLO"];
-
-export default function InvitationPage() {
-  const [code, setCode] = useState("");
+function InvitationContent() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const [step, setStep] = useState<"code" | "name" | "welcome">("code");
+  const [step, setStep] = useState<"name" | "welcome">("name");
   const { setInvited, invited } = useStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  // Auto-login from URL ?name=Emma
+  useEffect(() => {
+    const urlName = searchParams.get("name");
+    if (urlName && urlName.trim().length >= 2) {
+      setInvited(urlName.trim());
+      router.push("/store");
+    }
+  }, [searchParams, setInvited, router]);
+
+  // Already invited — skip to store
   useEffect(() => {
     if (invited) router.push("/store");
   }, [invited, router]);
 
+  // Welcome animation then redirect
   useEffect(() => {
     if (step === "welcome") {
       zoeSpeak(
@@ -32,16 +41,6 @@ export default function InvitationPage() {
     }
   }, [step, name, setInvited, router]);
 
-  const handleCode = () => {
-    unlockAudio();
-    if (VALID_CODES.includes(code.toUpperCase().trim())) {
-      setError("");
-      setStep("name");
-    } else {
-      setError("Hmm, that code doesn't seem right. Try MAGIC2025!");
-    }
-  };
-
   const handleName = () => {
     unlockAudio();
     if (name.trim().length < 2) {
@@ -54,7 +53,7 @@ export default function InvitationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-950 via-purple-900 to-pink-900 flex items-center justify-center p-4 overflow-hidden">
-      {/* Stars background */}
+      {/* Stars */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {Array.from({ length: 50 }).map((_, i) => (
           <motion.div
@@ -81,55 +80,35 @@ export default function InvitationPage() {
             className="w-28 h-28 rounded-full overflow-hidden mx-auto mb-4 border-4 border-white/40 shadow-2xl"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/zoe.jpg" alt="Zoé" className="w-full h-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; (e.target as HTMLImageElement).parentElement!.innerHTML='<div class="w-full h-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-5xl">🧚</div>'; }} />
+            <img
+              src="/zoe.jpg"
+              alt="Zoé"
+              className="w-full h-full object-cover object-top"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+                (e.target as HTMLImageElement).parentElement!.innerHTML =
+                  '<div class="w-full h-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-5xl">🧚</div>';
+              }}
+            />
           </motion.div>
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Zoé&apos;s Secret Store
-          </h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Zoé&apos;s Secret Store</h1>
           <p className="text-purple-200 text-base mt-2 max-w-xs mx-auto leading-relaxed">
-            Hi! I&apos;m Zoé 👋 I hand-pick every item in my store myself.<br />
+            Hi! I&apos;m Zoé 👋 I hand-pick every item in my store myself.
+            <br />
             <span className="text-purple-300 text-sm">By invitation only ✨</span>
           </p>
         </div>
 
         {/* Card */}
-        <motion.div
-          className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl"
-        >
-          {step === "code" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <div className="text-center">
-                <p className="text-white/80 text-sm">Got an invitation? Enter your secret code below.</p>
-              </div>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Enter your secret code..."
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCode()}
-                  className="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white placeholder-white/40 text-center text-lg font-mono tracking-widest uppercase focus:outline-none focus:border-purple-400 focus:bg-white/25"
-                />
-                {error && <p className="text-pink-300 text-sm text-center">{error}</p>}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleCode}
-                  className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold py-3 rounded-xl text-lg shadow-lg"
-                >
-                  Enter the Store ✨
-                </motion.button>
-              </div>
-              <p className="text-white/40 text-xs text-center">Hint: try MAGIC2025</p>
-            </motion.div>
-          )}
-
+        <motion.div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
           {step === "name" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="text-center">
                 <p className="text-2xl mb-2">🎉</p>
-                <p className="text-white font-bold text-lg">Welcome! You&apos;re in!</p>
-                <p className="text-white/70 text-sm mt-1">What&apos;s your name? Zoé would love to greet you properly.</p>
+                <p className="text-white font-bold text-lg">Welcome! You&apos;re invited!</p>
+                <p className="text-white/70 text-sm mt-1">
+                  What&apos;s your name? Zoé would love to greet you properly.
+                </p>
               </div>
               <div className="space-y-3">
                 <input
@@ -184,5 +163,13 @@ export default function InvitationPage() {
         </motion.div>
       </motion.div>
     </div>
+  );
+}
+
+export default function InvitationPage() {
+  return (
+    <Suspense fallback={null}>
+      <InvitationContent />
+    </Suspense>
   );
 }
