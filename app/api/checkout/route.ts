@@ -30,6 +30,9 @@ export async function POST(request: NextRequest) {
     payment_method_types: ["card"],
     line_items: lineItems,
     mode: "payment",
+    shipping_address_collection: {
+      allowed_countries: ["US", "CA", "FR", "BE", "CH", "GB", "AU", "DE", "ES", "IT", "NL", "PT"],
+    },
     success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}&name=${encodeURIComponent(visitorName)}`,
     cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/wishlist`,
     metadata: {
