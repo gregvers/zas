@@ -39,6 +39,12 @@ export async function POST(request: NextRequest) {
       visitorName,
       colorNote: colorNote || "(none)",
     },
+    payment_intent_data: {
+      metadata: {
+        visitorName,
+        colorNote: colorNote || "(none)",
+      },
+    },
   });
 
   return NextResponse.json({ url: session.url });
