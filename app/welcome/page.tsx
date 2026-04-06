@@ -115,7 +115,7 @@ export default function WelcomePage() {
             onClick={handleEnter}
             className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold py-5 rounded-2xl text-xl shadow-2xl"
           >
-            Let&apos;s go! 🧚
+            Enter Zoé&apos;s Store ✨
           </motion.button>
           <p className="text-white/30 text-xs mt-4">Tap to enter and hear Zoé&apos;s welcome 🔊</p>
         </motion.div>
