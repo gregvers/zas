@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   const lineItems = items.map((item) => ({
     price_data: {
-      currency: "cad",
+      currency: "usd",
       product_data: {
         name: item.id === freeGiftId ? `${item.name} 🎁 (Free Gift)` : item.name,
       },
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/wishlist`,
     metadata: {
       visitorName,
-      ...(colorNote ? { colorNote } : {}),
+      colorNote: colorNote || "(none)",
     },
   });
 
