@@ -30,19 +30,20 @@ export async function POST(request: NextRequest) {
     payment_method_types: ["card"],
     line_items: lineItems,
     mode: "payment",
+    client_reference_id: visitorName || "unknown",
     shipping_address_collection: {
       allowed_countries: ["US"],
     },
     success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}&name=${encodeURIComponent(visitorName)}`,
     cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/wishlist`,
     metadata: {
-      visitorName,
-      colorNote: colorNote || "(none)",
+      name: visitorName || "unknown",
+      color_note: colorNote || "(none)",
     },
     payment_intent_data: {
       metadata: {
-        visitorName,
-        colorNote: colorNote || "(none)",
+        name: visitorName || "unknown",
+        color_note: colorNote || "(none)",
       },
     },
   });
