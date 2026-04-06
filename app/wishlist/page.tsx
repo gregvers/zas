@@ -15,6 +15,7 @@ export default function WishlistPage() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
   const [colorNote, setColorNote] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
 
@@ -63,6 +64,7 @@ export default function WishlistPage() {
   const handleCheckout = async () => {
     if (checkingOut || !freeGift) return;
     setCheckingOut(true);
+    setCheckoutError("");
     try {
       // Build line items: 1 free copy of freeGift, extra copies at full price, others at full price
       const allItems = heartedProducts.flatMap((p) => {
@@ -87,10 +89,14 @@ export default function WishlistPage() {
           colorNote: colorNote.trim(),
         }),
       });
-      const { url } = await res.json();
-      window.location.href = url;
-    } catch {
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Checkout failed");
+      }
+      window.location.href = data.url;
+    } catch (err) {
       setCheckingOut(false);
+      setCheckoutError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     }
   };
 
@@ -232,6 +238,9 @@ export default function WishlistPage() {
                     </p>
                   </div>
 
+                  {checkoutError && (
+                    <p className="text-red-300 text-sm text-center mb-3">⚠️ {checkoutError}</p>
+                  )}
                   <motion.button
                     whileHover={{ scale: checkingOut ? 1 : 1.02 }}
                     whileTap={{ scale: checkingOut ? 1 : 0.98 }}

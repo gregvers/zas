@@ -4,6 +4,9 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: NextRequest) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: "Stripe is not configured" }, { status: 500 });
+  }
   const body = await request.text();
   const { items, freeGiftId, visitorName, colorNote } = JSON.parse(body) as {
     items: { id: string; name: string; price: number; emoji: string }[];
@@ -36,4 +39,8 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ url: session.url });
+}
+
+export async function GET() {
+  return NextResponse.json({ ok: true, stripe: !!process.env.STRIPE_SECRET_KEY });
 }
