@@ -20,21 +20,24 @@ export default function WishlistPage() {
 
   const heartedProducts = products.filter((p) => hearts.includes(p.id));
 
-  // Auto-pick the most expensive item as the free gift
+  // Auto-pick the most expensive item as the free gift (1 unit free)
   const freeGift = heartedProducts.reduce<typeof heartedProducts[0] | null>(
     (best, p) => (!best || p.price > best.price ? p : best),
     null
   );
 
-  const paidItems = freeGift
-    ? heartedProducts.filter((p) => p.id !== freeGift.id)
-    : heartedProducts;
-
   const getQty = (id: string) => quantities[id] ?? 1;
   const setQty = (id: string, val: number) =>
     setQuantities((q) => ({ ...q, [id]: Math.max(1, val) }));
 
-  const total = paidItems.reduce((sum, p) => sum + p.price * getQty(p.id), 0);
+  // Total: paid items + extra copies of the free gift (beyond the 1 free unit)
+  const total = heartedProducts.reduce((sum, p) => {
+    if (p.id === freeGift?.id) {
+      const extraQty = Math.max(0, getQty(p.id) - 1);
+      return sum + p.price * extraQty;
+    }
+    return sum + p.price * getQty(p.id);
+  }, 0);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -61,10 +64,19 @@ export default function WishlistPage() {
     if (checkingOut || !freeGift) return;
     setCheckingOut(true);
     try {
+      // Build line items: 1 free copy of freeGift, extra copies at full price, others at full price
       const allItems = heartedProducts.flatMap((p) => {
-        const qty = p.id === freeGift.id ? 1 : getQty(p.id);
+        const qty = getQty(p.id);
+        if (p.id === freeGift.id) {
+          const items = [{ id: p.id, name: p.name, price: p.price, emoji: p.emoji }]; // 1 free
+          for (let i = 1; i < qty; i++) {
+            items.push({ id: p.id + "-extra", name: p.name, price: p.price, emoji: p.emoji }); // paid extras
+          }
+          return items;
+        }
         return Array.from({ length: qty }, () => ({ id: p.id, name: p.name, price: p.price, emoji: p.emoji }));
       });
+
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,45 +126,45 @@ export default function WishlistPage() {
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {heartedProducts.map((product) => (
-                <motion.div key={product.id} className="relative">
-                  <ProductCard product={product} light={false} hidePrice />
-
-                  {freeGift?.id === product.id ? (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="absolute inset-0 rounded-2xl bg-yellow-400/20 border-2 border-yellow-400 flex items-center justify-center pointer-events-none"
-                    >
-                      <div className="bg-yellow-400 rounded-full px-3 py-1 text-sm font-bold text-gray-900">
-                        FREE GIFT! 🎁
-                      </div>
-                    </motion.div>
-                  ) : (
-                    /* Quantity stepper for paid items */
-                    <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-                      <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
-                        <button
-                          onClick={() => setQty(product.id, getQty(product.id) - 1)}
-                          className="w-6 h-6 rounded-full bg-white/20 text-white font-bold text-sm flex items-center justify-center"
+              {heartedProducts.map((product) => {
+                const isFree = freeGift?.id === product.id;
+                const qty = getQty(product.id);
+                return (
+                  <div key={product.id} className="flex flex-col gap-2">
+                    {/* Product card — no overlay */}
+                    <div className="relative">
+                      <ProductCard product={product} light={false} hidePrice />
+                      {isFree && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.3 }}
+                          className="absolute top-2 left-2 bg-yellow-400 rounded-full px-2 py-0.5 text-xs font-bold text-gray-900 shadow"
                         >
-                          −
-                        </button>
-                        <span className="text-white text-sm font-bold w-4 text-center">
-                          {getQty(product.id)}
-                        </span>
-                        <button
-                          onClick={() => setQty(product.id, getQty(product.id) + 1)}
-                          className="w-6 h-6 rounded-full bg-white/20 text-white font-bold text-sm flex items-center justify-center"
-                        >
-                          +
-                        </button>
-                      </div>
+                          FREE GIFT! 🎁
+                        </motion.div>
+                      )}
                     </div>
-                  )}
-                </motion.div>
-              ))}
+
+                    {/* Quantity stepper — below the card */}
+                    <div className="flex items-center justify-center gap-3 bg-white/10 rounded-full py-1.5">
+                      <button
+                        onClick={() => setQty(product.id, qty - 1)}
+                        className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-base flex items-center justify-center"
+                      >
+                        −
+                      </button>
+                      <span className="text-white text-sm font-bold w-5 text-center">{qty}</span>
+                      <button
+                        onClick={() => setQty(product.id, qty + 1)}
+                        className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-base flex items-center justify-center"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             <AnimatePresence>
@@ -165,31 +177,45 @@ export default function WishlistPage() {
                   style={{ margin: "1rem 12px 0", padding: "20px 16px" }}
                 >
                   <h2 className="text-white font-bold text-xl mb-4 text-center">🎉 Take everything home?</h2>
+
                   <div className="space-y-2 mb-4">
-                    {heartedProducts.map((p) => (
-                      <div key={p.id} className="flex justify-between items-center gap-2 text-sm">
-                        <span className="text-white/80 truncate">
-                          {p.emoji} {p.name}
-                          {p.id !== freeGift.id && getQty(p.id) > 1 && (
-                            <span className="text-white/50 ml-1">×{getQty(p.id)}</span>
-                          )}
-                        </span>
-                        <span className="text-white font-medium shrink-0">
-                          {p.id === freeGift.id ? (
-                            <span className="text-yellow-400 font-bold">FREE 🎁</span>
-                          ) : (
-                            `$${(p.price * getQty(p.id)).toFixed(2)}`
-                          )}
-                        </span>
-                      </div>
-                    ))}
+                    {heartedProducts.map((p) => {
+                      const qty = getQty(p.id);
+                      const isFree = p.id === freeGift.id;
+                      const extraQty = isFree ? Math.max(0, qty - 1) : 0;
+                      const lineTotal = isFree ? extraQty * p.price : qty * p.price;
+
+                      return (
+                        <div key={p.id} className="text-sm">
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="text-white/80 truncate">
+                              {p.emoji} {p.name}
+                              {qty > 1 && <span className="text-white/50 ml-1">×{qty}</span>}
+                            </span>
+                            <span className="shrink-0 font-medium">
+                              {isFree && qty === 1 && (
+                                <span className="text-yellow-400 font-bold">FREE 🎁</span>
+                              )}
+                              {isFree && qty > 1 && (
+                                <span className="text-white">
+                                  <span className="text-yellow-400 font-bold">1× FREE</span>
+                                  {extraQty > 0 && <span className="text-white/80"> + ${lineTotal.toFixed(2)}</span>}
+                                </span>
+                              )}
+                              {!isFree && <span className="text-white">${lineTotal.toFixed(2)}</span>}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
                     <div className="border-t border-white/20 pt-2 flex justify-between">
                       <span className="text-white font-bold">Total</span>
                       <span className="text-green-400 font-bold text-lg">${total.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  {/* Color preference note */}
+                  {/* Color preference */}
                   <div className="mb-4">
                     <label className="block text-white/80 text-sm font-medium mb-1">
                       🎨 Any color preference?
