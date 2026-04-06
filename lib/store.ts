@@ -49,6 +49,13 @@ export const useStore = create<StoreState>()(
       markEnteredStore: () => set({ hasEnteredStore: true }),
       clearHearts: () => set({ hearts: [] }),
     }),
-    { name: "zoe-store" }
+    {
+      name: "zoe-store",
+      storage: {
+        getItem: (key) => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; } },
+        setItem: (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* blocked */ } },
+        removeItem: (key) => { try { localStorage.removeItem(key); } catch { /* blocked */ } },
+      },
+    }
   )
 );

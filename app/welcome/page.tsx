@@ -22,14 +22,18 @@ export default function WelcomePage() {
       return;
     }
     // Already unlocked this session → skip straight to store
-    if (sessionStorage.getItem("audioUnlocked") === "1") {
-      router.push("/store");
+    try {
+      if (sessionStorage.getItem("audioUnlocked") === "1") {
+        router.push("/store");
+      }
+    } catch {
+      // sessionStorage blocked (e.g. iOS Screen Time) — show welcome screen anyway
     }
   }, [mounted, invited, router]);
 
   const handleEnter = () => {
     unlockAudio();
-    sessionStorage.setItem("audioUnlocked", "1");
+    try { sessionStorage.setItem("audioUnlocked", "1"); } catch { /* blocked */ }
     if (hasEnteredStore) {
       zoeSpeak(`Welcome back ${visitorName}! So happy to see you again! I have some great things waiting for you.`);
     } else {
